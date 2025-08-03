@@ -11,7 +11,7 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 // Function to trigger GitHub Actions workflow
 async function triggerGitHubAction() {
   if (!GITHUB_TOKEN) {
-    console.log('No GitHub token provided, skipping GitHub Action trigger');
+    console.log('⚠️ No GitHub token provided, skipping GitHub Action trigger');
     return;
   }
 
@@ -25,6 +25,8 @@ async function triggerGitHubAction() {
   };
 
   try {
+    console.log(`🚀 Triggering GitHub Action for ${GITHUB_REPO}...`);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -37,12 +39,13 @@ async function triggerGitHubAction() {
     });
 
     if (response.ok) {
-      console.log('GitHub Action triggered successfully');
+      console.log('✅ GitHub Action triggered successfully');
     } else {
-      console.error('Failed to trigger GitHub Action:', response.status, await response.text());
+      const errorText = await response.text();
+      console.error(`❌ Failed to trigger GitHub Action: ${response.status} ${errorText}`);
     }
   } catch (error) {
-    console.error('Error triggering GitHub Action:', error);
+    console.error('❌ Error triggering GitHub Action:', error.message);
   }
 }
 
@@ -62,6 +65,18 @@ function verifyWebhookSignature(body, signature) {
 
 // HTTP server to handle webhooks
 const server = http.createServer((req, res) => {
+  // Set CORS headers for development
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-webhook-signature');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
   if (req.method === 'POST' && req.url === '/webhook') {
     let body = '';
     
@@ -75,13 +90,14 @@ const server = http.createServer((req, res) => {
         
         // Verify webhook signature if secret is configured
         if (!verifyWebhookSignature(body, signature)) {
+          console.log('❌ Invalid webhook signature');
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Invalid signature' }));
           return;
         }
 
-        console.log('Webhook received at:', new Date().toISOString());
-        console.log('Payload:', body.substring(0, 200) + '...');
+        console.log('✅ Webhook received at:', new Date().toISOString());
+        console.log('📄 Payload preview:', body.substring(0, 200) + (body.length > 200 ? '...' : ''));
 
         // Trigger the sync
         await triggerGitHubAction();
@@ -93,9 +109,12 @@ const server = http.createServer((req, res) => {
           timestamp: new Date().toISOString()
         }));
       } catch (error) {
-        console.error('Error processing webhook:', error);
+        console.error('❌ Error processing webhook:', error);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Internal server error' }));
+        res.end(JSON.stringify({ 
+          error: 'Internal server error',
+          timestamp: new Date().toISOString()
+        }));
       }
     });
   } else if (req.method === 'GET' && req.url === '/health') {
@@ -104,11 +123,27 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ 
       status: 'healthy', 
       timestamp: new Date().toISOString(),
-      port: PORT
+      port: PORT,
+      version: '1.0.0'
+    }));
+  } else if (req.method === 'GET' && req.url === '/') {
+    // Basic info endpoint
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      name: 'Learning Notes Webhook Server',
+      version: '1.0.0',
+      endpoints: {
+        health: '/health',
+        webhook: '/webhook (POST)'
+      },
+      timestamp: new Date().toISOString()
     }));
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not found' }));
+    res.end(JSON.stringify({ 
+      error: 'Not found',
+      timestamp: new Date().toISOString()
+    }));
   }
 });
 
