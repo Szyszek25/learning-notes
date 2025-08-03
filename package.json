@@ -1,6 +1,23 @@
 {
+  "name": "learning-notes-sync",
+  "version": "1.0.0",
+  "description": "Sync learning notes from Notion to GitHub",
+  "main": "sync-script.js",
+  "scripts": {
+    "sync": "node sync-script.js",
+    "webhook": "node webhook.js",
+    "start": "node webhook.js",
+    "test": "node test-webhook.js"
+  },
   "dependencies": {
     "@notionhq/client": "^4.0.1",
+    "node-fetch": "^3.3.2",
     "notion-to-md": "^3.1.9"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["notion", "sync", "markdown", "webhook"],
+  "author": "Szyszek25",
+  "license": "MIT"
 }

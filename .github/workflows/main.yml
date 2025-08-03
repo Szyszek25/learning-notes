@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '0 8 * * *'  # Codziennie o 8:00 UTC
   workflow_dispatch:  # Możliwość uruchomienia ręcznego
+  repository_dispatch:  # Webhook trigger
+    types: [notion_webhook]
 
 jobs:
   sync-notes:
