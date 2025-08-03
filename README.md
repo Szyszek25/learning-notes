@@ -1,6 +1,12 @@
 # learning-notes
 My personal repository consisting of weekly updated notes of my self-development in Cloud and Cybersecurity
 
+## 🇵🇱 Polski przewodnik konfiguracji
+**[KONFIGURACJA.md](KONFIGURACJA.md)** - Kompletny przewodnik konfiguracji w języku polskim
+
+## 🇬🇧 English Configuration Guide
+Continue reading below for English setup instructions
+
 ## Features
 
 - **Automated Sync**: Daily synchronization from Notion database at 8:00 UTC
